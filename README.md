@@ -25,6 +25,19 @@
 - 软件需要读取短信权限，请保证开启；
 - 需要设置允许软件后台运行、自启、加入白名单等最大程度保证软件存活，不同手机设置方法不同；
 - 部分手机需要在“ **短信-设置-验证码安全保护** ”关闭此项，以确保可以拦截验证码类短信；
+-  **部分手机需要删除广播上的权限才能拦截** 
+```
+ <receiver android:name=".receiver.SmsReceiver"
+      android:enabled="true"
+      android:exported="true"
+      //删除此权限
+      android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="1000">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+  </receiver>
+```
+
 
 
 License
