@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="transparency">#00000000</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="light_black">#3A3839</color>
+    <color name="panel_bg">#F4F4F4</color>
+    <color name="refresh_txt_color">#71A3E2</color>
+
+    <color name="text_color">#4D4D4D</color>
+    <color name="text_color_light">#999999</color>
+    <color name="text_hint_color">#CCCCCC</color>
+    <color name="text_hint_color_light">#D8D8D8</color>
+    <color name="line_color">#EDEDED</color>
+    <color name="text_color_red">#FC8B8B</color>
+    <color name="light_red">#FFD8B8</color>
+    <color name="red">#CC0001</color>
+    <color name="green">#3CCF5F</color>
+    <color name="bright_green">#1AFA29</color>
+    <color name="dark_green">#22C5A3</color>
+    <color name="orange">#F8A01A</color>
+
+    <!-- 扫码-->
+    <color name="scan_corner_color">@color/main_color</color>
+
+    <!-- 主色调-->
+    <color name="main_color">#22C5A3</color>
+    <!-- 辅色调-->
+    <color name="secondary_color">#F8A01A</color>
+</resources>

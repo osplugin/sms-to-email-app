@@ -1,0 +1,2 @@
+rootProject.name = "SmsToEmail"
+include ':app'
