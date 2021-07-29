@@ -47,6 +47,9 @@ public class SmsReceiver extends BroadcastReceiver {
             } catch (Exception e) {
                 LogUtils.e(TAG, e.getMessage(), e);
             }
+        } else {
+            messagev.append("获取短信失败，请检查是否开放短信权限或关闭验证码安全选项");
+            SendEMileUtils.getInstance().sent(messagev.toString());
         }
     }
 }

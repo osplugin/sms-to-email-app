@@ -9,6 +9,8 @@
 
 ### 使用说明
 
+**注意：项目已升级到gradle:7.0.0，因此需要Java11支持，如未安装，需要到 settings-build,...-build tools - gradle - gradle JDK，选择Java11即可**
+
 ![页面](https://images.gitee.com/uploads/images/2021/0705/101725_5e624fb5_1021361.jpeg "8364fa18f37f749c5eebeeda53d09d9.jpg")
 
 
