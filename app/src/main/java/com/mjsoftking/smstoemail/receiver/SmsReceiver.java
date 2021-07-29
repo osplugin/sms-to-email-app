@@ -31,7 +31,7 @@ public class SmsReceiver extends BroadcastReceiver {
                 LogUtils.e(TAG, "free message ");
                 String format = "发信人: %s \n" +
                         "收信时间: %s \n" +
-                        "内容: %s \n";
+                        "内容: %s \n\n\n";
                 for (Object o : smsExtra) {
                     SmsMessage sms = SmsMessage.createFromPdu((byte[]) o);
 
