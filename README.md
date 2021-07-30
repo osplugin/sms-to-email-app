@@ -4,8 +4,9 @@
 [![API](https://img.shields.io/badge/API-23%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=23)
 
 ### 介绍
-软件运行时拦截短信内容，将短信内容转发至设定的邮箱内，只支持发送到单个邮箱。
-邮件发送使用的android-mail资源。
+ **这是一个安装软件，不是依赖组件。** 
+软件运行时拦截短信内容，将短信内容转发至设定的邮箱内，一般适用于过渡使用的手机号，新手机插不下新卡，且还有空闲手机时，您无需携带原卡，也可正常接收短信验证码。来电设置无条件转接即可。
+ **邮件发送使用的android-mail资源。** 
 
 ### 使用说明
 
