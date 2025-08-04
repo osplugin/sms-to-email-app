@@ -42,10 +42,10 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cd $GITHUB_WORKSPACE  # 确保在项目根目录
+          cd $GITHUB_WORKSPACE
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $STORE_FILE
           chmod 600 $STORE_FILE
-          ls -la $STORE_FILE
+          echo "Keystore created at: $(realpath $STORE_FILE)"
 
       - name: Build signed APK
         env:
@@ -54,33 +54,39 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "构建时使用的密钥库路径: $STORE_FILE"
           ./gradlew assembleRelease --stacktrace
 
-      - name: Find and upload APK
+      - name: Find APK file
+        id: find-apk
         run: |
-          # 查找release APK（保留未签名检查以防构建失败）
-          APK_PATH=$(find app/build/outputs/apk/ -name "app-release.apk" | head -n 1)
+          # 精确查找签名APK
+          APK_PATH=$(find app/build/outputs/apk/release/ -name "app-release.apk" ! -name "*unsigned*" | head -n 1)
           
           if [ -z "$APK_PATH" ]; then
-            echo "Available APKs:"
-            find app/build/outputs/apk/ -name "*.apk" || echo "No APKs found"
+            echo "::error::未找到APK文件！目录内容："
+            find app/build/outputs/apk/ -type f || echo "无APK文件"
             exit 1
           fi
           
-          echo "Using APK at: $APK_PATH"
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "找到APK文件：$APK_PATH"
+          echo "apk_path=${APK_PATH}" >> $GITHUB_OUTPUT
+          echo "APK_PATH=${APK_PATH}" >> $GITHUB_ENV
 
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ env.APK_PATH || steps.find-apk.outputs.apk_path }}
+          asset_path: ${{ steps.find-apk.outputs.apk_path }}
           asset_name: sms-to-email-app-${{ steps.extract-version.outputs.version }}.apk
           asset_content_type: application/vnd.android.package-archive
 
       - name: Clean up
         if: always()
         run: |
-          rm -f keystore.jks
-          echo "Cleanup completed"
+          if [ -f "keystore.jks" ]; then
+            shred -u keystore.jks
+            echo "密钥库已安全删除"
+          fi
+          echo "清理完成"
