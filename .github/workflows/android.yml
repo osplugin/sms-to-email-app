@@ -4,11 +4,19 @@ on:
   release:
     types: [published]
 
+# 全局权限设置
+permissions:
+  contents: write  # 允许上传release资产
+  packages: write  # 如需发布到GitHub Packages
+  id-token: write  # 如需使用OIDC令牌
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整提交历史
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -19,6 +27,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew  # 确保构建脚本有执行权限
+
+      - name: Extract version from tag
+        id: extract-version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
       - name: Setup signing
         env:
           STORE_FILE: keystore.jks
@@ -26,8 +45,17 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          # 还原密钥库并设置严格权限
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $STORE_FILE
-          chmod 600 $STORE_FILE
+          chmod 600 $STORE_FILE  # 仅允许所有者读写
+          
+          # 验证密钥库文件
+          if [ ! -f "$STORE_FILE" ]; then
+            echo "❌ 错误：密钥库文件未生成！"
+            exit 1
+          fi
+          echo "✅ 密钥库文件权限："
+          ls -la $STORE_FILE
 
       - name: Build signed APK
         env:
@@ -36,24 +64,46 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          ./gradlew assembleRelease
+          # 设置Gradle缓存权限
+          mkdir -p ~/.gradle
+          echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
+          ./gradlew assembleRelease --no-daemon
 
-      - name: Find signed APK
-        id: find-apk
+      - name: Verify APK signature
         run: |
-          APK_PATH=$(find app/build/outputs/apk/ -name "*.apk" ! -name "*unsigned*" | head -n 1)
+          # 查找签名APK并验证
+          APK_PATH=$(find app/build/outputs/apk/ -name "*.apk" ! -name "*unsigned*" ! -name "*unaligned*" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "❌ 错误：未找到签名APK！"
+            find app/build/outputs/apk/ -name "*.apk" || echo "无APK文件生成"
+            exit 1
+          fi
+          
+          echo "✅ 找到签名APK：$APK_PATH"
           echo "apk_path=${APK_PATH}" >> $GITHUB_OUTPUT
+          
+          # 验证APK是否已签名（可选）
+          if ! apksigner verify --verbose "$APK_PATH" &> /dev/null; then
+            echo "❌ 错误：APK未正确签名！"
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ steps.find-apk.outputs.apk_path }}
+          asset_path: ${{ steps.verify-apk.outputs.apk_path }}
           asset_name: sms-to-email-app-${{ steps.extract-version.outputs.version }}.apk
           asset_content_type: application/vnd.android.package-archive
-        
+
       - name: Clean up
-        if: always()
+        if: always()  # 确保即使失败也执行清理
         run: |
-          rm -f keystore.jks
+          # 安全删除敏感文件
+          if [ -f "keystore.jks" ]; then
+            shred -u keystore.jks  # 安全删除密钥库
+          fi
           rm -f gradle.properties
+          echo "✅ 已清理敏感文件"
