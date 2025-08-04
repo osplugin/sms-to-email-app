@@ -9,13 +9,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
-import com.mjsoftking.dialogutilslib.DialogLibCommon;
 import com.mjsoftking.smstoemail.F;
 import com.mjsoftking.smstoemail.R;
 import com.mjsoftking.smstoemail.bean.LocalConfig;
 import com.mjsoftking.smstoemail.databinding.ActivityMainBinding;
 import com.mjsoftking.smstoemail.utils.LocalConfigUtils;
 import com.mjsoftking.smstoemail.utils.SendEMileUtils;
+import com.osard.dialogfragmentutilslib.DialogLibCommon;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import org.jetbrains.annotations.NotNull;

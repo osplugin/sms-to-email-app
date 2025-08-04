@@ -3,7 +3,7 @@ package com.mjsoftking.smstoemail;
 import android.app.Application;
 
 import com.blankj.utilcode.util.Utils;
-import com.mjsoftking.dialogutilslib.init.DialogLibInitSetting;
+import com.osard.dialogfragmentutilslib.init.DialogLibInitSetting;
 
 /**
  * 用途：
@@ -19,7 +19,6 @@ public class App extends Application {
         Utils.init(this);
 
         DialogLibInitSetting.getInstance()
-                .setDebug(BuildConfig.DEBUG)
-                .registerActivityLifecycleCallbacks(this);
+                .setDebug(BuildConfig.DEBUG);
     }
 }
