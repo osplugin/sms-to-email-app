@@ -6,6 +6,15 @@ android {
     compileSdkVersion 32
     buildToolsVersion "30.0.3"
 
+    signingConfigs {
+        release {
+            storeFile file(System.getenv('STORE_FILE') ?: 'keystore.jks')
+            storePassword System.getenv('STORE_PASSWORD')
+            keyAlias System.getenv('KEY_ALIAS')
+            keyPassword System.getenv('KEY_PASSWORD')
+        }
+    }
+
     defaultConfig {
         applicationId "com.mjsoftking.smstoemail"
         minSdkVersion 23
@@ -20,6 +29,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     buildFeatures {
