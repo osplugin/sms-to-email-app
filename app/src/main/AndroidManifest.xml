@@ -4,6 +4,10 @@
     package="com.mjsoftking.smstoemail">
 
     <!--  阅读消息-->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,6 +24,7 @@
         <activity
             android:name=".activity.MainActivity"
             android:screenOrientation="portrait"
+            android:exported="true"
             android:windowSoftInputMode="adjustPan|stateAlwaysHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
