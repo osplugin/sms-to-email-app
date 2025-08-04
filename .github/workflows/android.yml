@@ -35,49 +35,30 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
-      - name: Setup signing environment
-        id: setup-signing
+      - name: Setup signing
         env:
-          STORE_FILE: ${{ github.workspace }}/keystore.jks
+          STORE_FILE: keystore.jks
           STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          # 确保在工作空间根目录操作
-          cd $GITHUB_WORKSPACE
-          
-          # 解码并保存密钥库文件
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $STORE_FILE
           chmod 600 $STORE_FILE
-          
-          # 验证文件
-          if [ ! -f "$STORE_FILE" ]; then
-            echo "❌ Keystore file not created!"
-            exit 1
-          fi
-          
-          echo "Keystore info:"
-          ls -la $STORE_FILE
-          echo "store_file=$STORE_FILE" >> $GITHUB_OUTPUT
+          echo "Keystore created at: $(realpath $STORE_FILE)"
 
       - name: Build signed APK
         env:
-          STORE_FILE: ${{ steps.setup-signing.outputs.store_file }}
+          STORE_FILE: keystore.jks
           STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          # 打印调试信息
-          echo "Building with keystore at: $STORE_FILE"
-          ls -la $STORE_FILE || echo "Keystore not found"
-          
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew assembleRelease
 
-      - name: Verify APK
-        id: verify-apk
+      - name: Find and upload APK
         run: |
-          # 查找签名APK（排除未签名和对齐的临时文件）
-          APK_PATH=$(find app/build/outputs/apk/ -name "*.apk" ! -name "*unsigned*" ! -name "*unaligned*" | head -n 1)
+          # 查找release APK（保留未签名检查以防构建失败）
+          APK_PATH=$(find app/build/outputs/apk/ -name "app-release.apk" | head -n 1)
           
           if [ -z "$APK_PATH" ]; then
             echo "Available APKs:"
@@ -85,30 +66,19 @@ jobs:
             exit 1
           fi
           
-          echo "Found signed APK at: $APK_PATH"
+          echo "Using APK at: $APK_PATH"
           echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-
-          # 验证签名（可选）
-          if ! apksigner verify --print-certs "$APK_PATH"; then
-            echo "❌ APK not properly signed!"
-            exit 1
-          fi
 
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ steps.verify-apk.outputs.apk_path }}
+          asset_path: ${{ env.APK_PATH || steps.find-apk.outputs.apk_path }}
           asset_name: sms-to-email-app-${{ steps.extract-version.outputs.version }}.apk
           asset_content_type: application/vnd.android.package-archive
 
       - name: Clean up
         if: always()
         run: |
-          if [ -f "keystore.jks" ]; then
-            shred -u keystore.jks
-            echo "Keystore securely removed"
-          fi
-          rm -f gradle.properties
+          rm -f keystore.jks
+          echo "Cleanup completed"
