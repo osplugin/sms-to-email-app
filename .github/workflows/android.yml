@@ -71,14 +71,27 @@ jobs:
       run: |
         ./gradlew assembleRelease
         
-    - name: Upload APK to release
+    - name: Find and Upload APK
+      run: |
+        # 查找所有 release 版的 APK 文件
+        APK_PATH=$(find . -name "*release*.apk" | head -n 1)
+        
+        if [ -z "$APK_PATH" ]; then
+          echo "❌ 错误：未找到 APK 文件"
+          exit 1
+        else
+          echo "✅ 找到 APK 文件：$APK_PATH"
+          echo "APK_PATH=${APK_PATH}" >> $GITHUB_ENV
+        fi
+
+    - name: Upload APK
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: app/release/app-release.apk
-        asset_name: ${{ steps.project-name.outputs.name }}-${{ steps.extract-version.outputs.version }}.apk
+        asset_path: ${{ env.APK_PATH }}
+        asset_name: sms-to-email-app-${{ steps.get-version.outputs.version }}.apk
         asset_content_type: application/vnd.android.package-archive
         
     - name: Clean up
